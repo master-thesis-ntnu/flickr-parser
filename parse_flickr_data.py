@@ -1,5 +1,7 @@
 import json
 
+values_to_keep = ['id', 'dateuploaded', 'tags', 'urls', 'title', 'description']
+
 def readLinesFromFile(inputFile, outputFile):
     x = 0
     line = inputFile.readline()
@@ -15,6 +17,7 @@ def readLinesFromFile(inputFile, outputFile):
         formatTitleAttribute(photo)
         formatDescriptionAttribute(photo)
         formatUrlAttribute(photo)
+        removeUnwantedValues(photo)
 
         # Write parsed photo object to file
         outputFile.write(json.dumps(photo) + '\n')
@@ -23,18 +26,25 @@ def readLinesFromFile(inputFile, outputFile):
 
         if x % 10000 == 0:
             print 'Parsed photos so far: ' + str(x)
-            break
         x += 1
 
     inputFile.close()
     outputFile.close()
 
-def formatTagsAttribute(photo):
-    photo['tags'] = photo['tags']['tag']
+# Removes all unwanted values from the object.
+# The values to keep are given in the variable named values_to_keep
+def removeUnwantedValues(photo):
+    for key in photo.keys():
+        if not key in values_to_keep:
+            del photo[key]
 
-    for tag in photo['tags']:
-        tag['content'] = tag['_content']
-        tag.pop('_content')
+def formatTagsAttribute(photo):
+    tags = []
+
+    for tag in photo['tags']['tag']:
+        tags.append(tag['_content'])
+
+    photo['tags'] = tags
 
 def formatTitleAttribute(photo):
     photo['title'] = photo['title']['_content']
@@ -43,15 +53,16 @@ def formatDescriptionAttribute(photo):
     photo['description'] = photo['description']['_content']
 
 def formatUrlAttribute(photo):
-    photo['urls'] = photo['urls']['url']
+    urls = []
 
-    for url in photo['urls']:
-        url['content'] = url['_content']
-        url.pop('_content')
+    for url in photo['urls']['url']:
+        urls.append(url['_content'])
+
+    photo['urls'] = urls
 
 def main():
-    inputFile = open('../data/flickr.data')
-    outputFile = open('../data/flickr-parsed.data', 'w')
+    inputFile = open('./flickr.data')
+    outputFile = open('./flickr-parsed.data', 'w')
     readLinesFromFile(inputFile, outputFile)
 
 main()
